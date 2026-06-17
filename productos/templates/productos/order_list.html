@@ -1,0 +1,14 @@
+{% extends 'productos/base.html' %}
+{% block content %}
+<h2>Mis pedidos</h2>
+<a href="{% url 'order_create' %}">Crear pedido</a>
+<ul>
+    {% for o in pedidos %}
+        <li>
+            <a href="{% url 'order_detail' o.pk %}">
+                Pedido #{{ o.id }} - {{ o.producto.nombre }}
+            </a>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}
