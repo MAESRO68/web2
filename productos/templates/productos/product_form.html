@@ -1,9 +1,51 @@
 {% extends 'productos/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+
 {% block content %}
-<h2>Formulario de producto</h2>
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Guardar</button>
-</form>
+<div class="glass-panel form-card">
+    <h2 class="form-title">{{ title }}</h2>
+    
+    <form method="POST" novalidate>
+        {% csrf_token %}
+        
+        <!-- Errores no asociados a campos -->
+        {% if form.non_field_errors %}
+            <div class="form-errors">
+                <strong>Por favor corrige los siguientes errores:</strong>
+                <ul>
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <!-- Listar los campos uno a uno -->
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}<span style="color: var(--danger);">*</span>{% endif %}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="help-text">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        
+        <button type="submit" class="btn btn-primary">Guardar Registro</button>
+        
+        <div style="margin-top: 0.5rem;">
+            {% if producto %}
+                <a href="{% url 'product_detail' producto.pk %}" class="btn btn-secondary" style="display: block; text-align: center;">Cancelar</a>
+            {% else %}
+                <a href="{% url 'product_list' %}" class="btn btn-secondary" style="display: block; text-align: center;">Cancelar</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
 {% endblock %}

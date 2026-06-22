@@ -1,14 +1,81 @@
 {% extends 'productos/base.html' %}
+{% block title %}Mis Pedidos{% endblock %}
+
 {% block content %}
-<h2>Mis pedidos</h2>
-<a href="{% url 'order_create' %}">Crear pedido</a>
-<ul>
-    {% for o in pedidos %}
-        <li>
-            <a href="{% url 'order_detail' o.pk %}">
-                Pedido #{{ o.id }} - {{ o.producto.nombre }}
-            </a>
-        </li>
-    {% endfor %}
-</ul>
+<div class="list-header" style="margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 2.25rem;">
+            {% if user.is_superuser %}
+                Gestión General de Pedidos
+            {% else %}
+                Mis Pedidos
+            {% endif %}
+        </h1>
+        <p style="color: var(--text-secondary);">Consulta, realiza el seguimiento y gestiona los pedidos del sistema.</p>
+    </div>
+    <a href="{% url 'order_create' %}" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 0.25rem;">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        Realizar Pedido
+    </a>
+</div>
+
+{% if pedidos %}
+    <div class="glass-panel" style="overflow-x: auto; padding: 1rem;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-size: 0.9rem;">
+                    <th style="padding: 1rem;">ID</th>
+                    <th style="padding: 1rem;">Producto</th>
+                    {% if user.is_superuser %}
+                        <th style="padding: 1rem;">Usuario</th>
+                    {% endif %}
+                    <th style="padding: 1rem; text-align: center;">Cantidad</th>
+                    <th style="padding: 1rem;">Fecha de Solicitud</th>
+                    <th style="padding: 1rem; text-align: right;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in pedidos %}
+                    <tr style="border-bottom: 1px solid var(--border-color); transition: var(--transition-fast);" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='none'">
+                        <td style="padding: 1rem; font-weight: 700;">#{{ o.id }}</td>
+                        <td style="padding: 1rem;">
+                            <a href="{% url 'product_detail' o.producto.pk %}" style="font-weight: 600;">
+                                {{ o.producto.nombre }}
+                            </a>
+                        </td>
+                        {% if user.is_superuser %}
+                            <td style="padding: 1rem; color: var(--primary);">{{ o.usuario.username }}</td>
+                        {% endif %}
+                        <td style="padding: 1rem; text-align: center; font-weight: 600;">{{ o.cantidad }}</td>
+                        <td style="padding: 1rem; color: var(--text-secondary); font-size: 0.9rem;">{{ o.fecha|date:"d M Y, H:i" }}</td>
+                        <td style="padding: 1rem; text-align: right;">
+                            <div style="display: inline-flex; gap: 0.5rem;">
+                                <a href="{% url 'order_detail' o.pk %}" class="btn btn-secondary btn-sm" title="Detalles">Ver</a>
+                                <a href="{% url 'order_update' o.pk %}" class="btn btn-primary btn-sm" title="Editar">Editar</a>
+                                <a href="{% url 'order_delete' o.pk %}" class="btn btn-danger btn-sm" 
+                                   onclick="return confirm('¿Estás seguro de que deseas cancelar el Pedido #{{ o.id }}? El stock se devolverá automáticamente.');"
+                                   title="Cancelar Pedido">Cancelar</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="glass-panel" style="padding: 4rem 2rem; text-align: center; color: var(--text-secondary);">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 1rem; opacity: 0.5;">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <p style="font-size: 1.1rem; font-weight: 500;">No tienes pedidos registrados en este momento.</p>
+        <p style="font-size: 0.9rem; margin-top: 0.25rem;">¡Comienza solicitando alguno de los productos de nuestro catálogo!</p>
+        <a href="{% url 'order_create' %}" class="btn btn-primary btn-sm" style="margin-top: 1.5rem;">Realizar Nuevo Pedido</a>
+    </div>
+{% endif %}
 {% endblock %}

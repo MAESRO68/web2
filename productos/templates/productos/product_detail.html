@@ -1,10 +1,75 @@
 {% extends 'productos/base.html' %}
-{% block content %}
-<h2>{{ producto.nombre }}</h2>
-<p>{{ producto.descripcion }}</p>
-<p>Precio: {{ producto.precio }}</p>
-<p>Stock: {{ producto.stock }}</p>
+{% block title %}{{ producto.nombre }}{% endblock %}
 
-<a href="{% url 'product_update' producto.pk %}">Editar</a>
-<a href="{% url 'product_delete' producto.pk %}">Eliminar</a>
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{% url 'product_list' %}" class="btn btn-secondary btn-sm">
+        &larr; Volver al catálogo
+    </a>
+</div>
+
+<div class="glass-panel detail-view">
+    <div class="detail-header">
+        <div>
+            <span class="card-category">{{ producto.get_categoria_display }}</span>
+            <h1 class="detail-title">{{ producto.nombre }}</h1>
+        </div>
+        <div class="detail-price-badge">
+            <span style="font-size: 2rem; font-weight: 800; color: var(--primary);">${{ producto.precio }}</span>
+        </div>
+    </div>
+
+    <div>
+        <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem; color: var(--text-secondary);">Descripción del producto</h3>
+        <p style="color: var(--text-primary); font-size: 1.05rem; white-space: pre-line;">{{ producto.descripcion }}</p>
+    </div>
+
+    <div class="detail-info">
+        <div class="info-item">
+            <span class="info-label">Categoría</span>
+            <span class="info-value">{{ producto.get_categoria_display }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Stock en Inventario</span>
+            <span class="info-value">
+                {% if producto.stock > 0 %}
+                    <span style="color: var(--success); font-weight: 700;">{{ producto.stock }} unidades</span>
+                </div>
+                {% else %}
+                    <span style="color: var(--danger); font-weight: 700;">Agotado</span>
+                {% endif %}
+            </span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Fecha de Adquisición</span>
+            <span class="info-value">
+                {% if producto.fecha_adquisicion %}
+                    {{ producto.fecha_adquisicion|date:"d M Y" }}
+                {% else %}
+                    <span style="color: var(--text-muted); font-style: italic;">No registrada</span>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    {% if user.is_superuser or user.is_staff %}
+        <div class="detail-actions">
+            <a href="{% url 'product_update' producto.pk %}" class="btn btn-primary" style="flex-grow: 1;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Editar Producto
+            </a>
+            <a href="{% url 'product_delete' producto.pk %}" class="btn btn-danger" 
+               onclick="return confirm('¿Estás seguro de que deseas eliminar permanentemente el producto \'{{ producto.nombre }}\'?');">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Eliminar
+            </a>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

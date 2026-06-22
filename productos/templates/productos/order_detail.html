@@ -1,10 +1,73 @@
 {% extends 'productos/base.html' %}
-{% block content %}
-<h2>Pedido #{{ pedido.id }}</h2>
-<p>Producto: {{ pedido.producto.nombre }}</p>
-<p>Cantidad: {{ pedido.cantidad }}</p>
-<p>Fecha: {{ pedido.fecha }}</p>
+{% block title %}Detalle del Pedido #{{ pedido.id }}{% endblock %}
 
-<a href="{% url 'order_update' pedido.pk %}">Editar</a>
-<a href="{% url 'order_delete' pedido.pk %}">Eliminar</a>
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{% url 'order_list' %}" class="btn btn-secondary btn-sm">
+        &larr; Volver a pedidos
+    </a>
+</div>
+
+<div class="glass-panel detail-view">
+    <div class="detail-header">
+        <div>
+            <span class="card-category">Pedido Confirmado</span>
+            <h1 class="detail-title">Pedido #{{ pedido.id }}</h1>
+        </div>
+        <div class="detail-price-badge">
+            <span style="font-size: 2.25rem; font-weight: 800; color: var(--success);">
+                ${{ pedido.cantidad }} x ${{ pedido.producto.precio }}
+            </span>
+        </div>
+    </div>
+
+    <div>
+        <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem; color: var(--text-secondary);">Producto solicitado</h3>
+        <p style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">
+            <a href="{% url 'product_detail' pedido.producto.pk %}">{{ pedido.producto.nombre }}</a>
+        </p>
+        <p style="color: var(--text-secondary); margin-top: 0.25rem;">{{ pedido.producto.descripcion|truncatewords:20 }}</p>
+    </div>
+
+    <div class="detail-info">
+        <div class="info-item">
+            <span class="info-label">Cantidad</span>
+            <span class="info-value">{{ pedido.cantidad }} unidades</span>
+        </div>
+        
+        <div class="info-item">
+            <span class="info-label">Comprador</span>
+            <span class="info-value" style="color: var(--primary);">{{ pedido.usuario.username }} ({{ pedido.usuario.email }})</span>
+        </div>
+        
+        <div class="info-item">
+            <span class="info-label">Fecha del Pedido</span>
+            <span class="info-value">{{ pedido.fecha|date:"d F Y, H:i" }}</span>
+        </div>
+    </div>
+    
+    <div class="glass-panel" style="padding: 1.25rem; background: rgba(255,255,255,0.01); display: flex; justify-content: space-between; align-items: center; border-radius: var(--radius-md);">
+        <span style="font-weight: 600; font-size: 1.1rem; color: var(--text-secondary);">Monto Total a Pagar:</span>
+        <!-- Total price computed! -->
+        <span style="font-size: 1.6rem; font-weight: 800; color: var(--primary);">$ {% widthratio pedido.cantidad 1 pedido.producto.precio %}</span>
+    </div>
+
+    <div class="detail-actions">
+        <a href="{% url 'order_update' pedido.pk %}" class="btn btn-primary" style="flex-grow: 1;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Modificar Pedido
+        </a>
+        <a href="{% url 'order_delete' pedido.pk %}" class="btn btn-danger" 
+           onclick="return confirm('¿Estás seguro de que deseas cancelar el Pedido #{{ pedido.id }}? El stock de inventario se restablecerá.');">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Cancelar Pedido
+        </a>
+    </div>
+</div>
 {% endblock %}

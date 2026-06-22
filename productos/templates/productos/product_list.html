@@ -1,12 +1,174 @@
 {% extends 'productos/base.html' %}
+{% block title %}Catálogo de Productos{% endblock %}
+
 {% block content %}
-<h2>Productos</h2>
-<a href="{% url 'product_create' %}">Crear producto</a>
-<ul>
-    {% for p in productos %}
-        <li>
-            <a href="{% url 'product_detail' p.pk %}">{{ p.nombre }}</a>
-        </li>
-    {% endfor %}
-</ul>
+<div class="list-header" style="margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 2.25rem;">Catálogo de Productos</h1>
+        <p style="color: var(--text-secondary);">Explora, busca y filtra nuestra lista de productos de inventario.</p>
+    </div>
+    {% if user.is_superuser or user.is_staff %}
+        <a href="{% url 'product_create' %}" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 0.25rem;">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Agregar Producto
+        </a>
+    {% endif %}
+</div>
+
+<!-- Panel de Filtros y Búsqueda -->
+<div class="search-filter-panel glass-panel">
+    <form method="GET" action="{% url 'product_list' %}" class="filter-form">
+        <!-- Mantener parámetros de ordenamiento para que no se pierdan al filtrar -->
+        {% if order_sel %}<input type="hidden" name="order" value="{{ order_sel }}">{% endif %}
+        {% if dir_sel %}<input type="hidden" name="dir" value="{{ dir_sel }}">{% endif %}
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="q">Buscar por texto</label>
+            <input type="text" id="q" name="q" value="{{ q }}" placeholder="Nombre o descripción...">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="categoria">Categoría</label>
+            <select id="categoria" name="categoria">
+                <option value="">Todas las categorías</option>
+                {% for code, label in categorias %}
+                    <option value="{{ code }}" {% if categoria_sel == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="disponible">Disponibilidad</label>
+            <select id="disponible" name="disponible">
+                <option value="" {% if disponible_sel == '' %}selected{% endif %}>Todos</option>
+                <option value="si" {% if disponible_sel == 'si' %}selected{% endif %}>En Stock</option>
+                <option value="no" {% if disponible_sel == 'no' %}selected{% endif %}>Agotado</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex-grow: 1; height: 42px;">Filtrar</button>
+            <a href="{% url 'product_list' %}" class="btn btn-secondary" style="height: 42px;" title="Limpiar Filtros">Limpiar</a>
+        </div>
+    </form>
+</div>
+
+<!-- Cabecera de Ordenamiento y Metadatos -->
+<div class="list-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+    <div style="color: var(--text-muted); font-size: 0.9rem;">
+        Se encontraron <strong>{{ page_obj.paginator.count }}</strong> producto(s)
+    </div>
+    
+    <div class="list-sorting">
+        <span>Ordenar por:</span>
+        
+        <!-- Nombre -->
+        <a href="?order=nombre&dir={% if order_sel == 'nombre' and dir_sel == 'asc' %}desc{% else %}asc{% endif %}{% if q %}&q={{ q }}{% endif %}{% if categoria_sel %}&categoria={{ categoria_sel }}{% endif %}{% if disponible_sel %}&disponible={{ disponible_sel }}{% endif %}" 
+           class="sort-link {% if order_sel == 'nombre' %}active{% endif %}">
+            Nombre
+            {% if order_sel == 'nombre' %}
+                <span class="sort-direction">{% if dir_sel == 'asc' %}▲{% else %}▼{% endif %}</span>
+            {% endif %}
+        </a>
+
+        <!-- Precio -->
+        <a href="?order=precio&dir={% if order_sel == 'precio' and dir_sel == 'asc' %}desc{% else %}asc{% endif %}{% if q %}&q={{ q }}{% endif %}{% if categoria_sel %}&categoria={{ categoria_sel }}{% endif %}{% if disponible_sel %}&disponible={{ disponible_sel }}{% endif %}" 
+           class="sort-link {% if order_sel == 'precio' %}active{% endif %}">
+            Precio
+            {% if order_sel == 'precio' %}
+                <span class="sort-direction">{% if dir_sel == 'asc' %}▲{% else %}▼{% endif %}</span>
+            {% endif %}
+        </a>
+
+        <!-- Stock -->
+        <a href="?order=stock&dir={% if order_sel == 'stock' and dir_sel == 'asc' %}desc{% else %}asc{% endif %}{% if q %}&q={{ q }}{% endif %}{% if categoria_sel %}&categoria={{ categoria_sel }}{% endif %}{% if disponible_sel %}&disponible={{ disponible_sel }}{% endif %}" 
+           class="sort-link {% if order_sel == 'stock' %}active{% endif %}">
+            Stock
+            {% if order_sel == 'stock' %}
+                <span class="sort-direction">{% if dir_sel == 'asc' %}▲{% else %}▼{% endif %}</span>
+            {% endif %}
+        </a>
+
+        <!-- Fecha Adquisición -->
+        <a href="?order=fecha_adquisicion&dir={% if order_sel == 'fecha_adquisicion' and dir_sel == 'asc' %}desc{% else %}asc{% endif %}{% if q %}&q={{ q }}{% endif %}{% if categoria_sel %}&categoria={{ categoria_sel }}{% endif %}{% if disponible_sel %}&disponible={{ disponible_sel }}{% endif %}" 
+           class="sort-link {% if order_sel == 'fecha_adquisicion' %}active{% endif %}">
+            Fecha Adq.
+            {% if order_sel == 'fecha_adquisicion' %}
+                <span class="sort-direction">{% if dir_sel == 'asc' %}▲{% else %}▼{% endif %}</span>
+            {% endif %}
+        </a>
+    </div>
+</div>
+
+<!-- Listado en Grid -->
+{% if page_obj %}
+    <div class="grid">
+        {% for p in page_obj %}
+            <div class="card glass-panel">
+                <span class="card-category">{{ p.get_categoria_display }}</span>
+                <h3 class="card-title">{{ p.nombre }}</h3>
+                <p class="card-desc">{{ p.descripcion }}</p>
+                <div class="card-footer" style="margin-bottom: 1rem;">
+                    <span class="card-price">${{ p.precio }}</span>
+                    {% if p.stock > 0 %}
+                        <span class="badge badge-success">En Stock ({{ p.stock }})</span>
+                    {% else %}
+                        <span class="badge badge-danger">Agotado</span>
+                    {% endif %}
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="{% url 'product_detail' p.pk %}" class="btn btn-secondary btn-sm" style="flex-grow: 1;">Ver Detalles</a>
+                    {% if user.is_superuser or user.is_staff %}
+                        <a href="{% url 'product_update' p.pk %}" class="btn btn-primary btn-sm" title="Editar">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Controles de Paginación -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if url_params %}&{{ url_params }}{% endif %}" class="page-link" title="Primera">&laquo;&laquo;</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if url_params %}&{{ url_params }}{% endif %}" class="page-link" title="Anterior">&laquo;</a>
+            {% else %}
+                <span class="page-link disabled">&laquo;</span>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="page-link active">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}{% if url_params %}&{{ url_params }}{% endif %}" class="page-link">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if url_params %}&{{ url_params }}{% endif %}" class="page-link" title="Siguiente">&raquo;</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if url_params %}&{{ url_params }}{% endif %}" class="page-link" title="Última">&raquo;&raquo;</a>
+            {% else %}
+                <span class="page-link disabled">&raquo;</span>
+            {% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="glass-panel" style="padding: 4rem 2rem; text-align: center; color: var(--text-secondary);">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 1rem; opacity: 0.5;">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <p style="font-size: 1.1rem; font-weight: 500;">No se encontraron productos coincidentes.</p>
+        <p style="font-size: 0.9rem; margin-top: 0.25rem;">Prueba a modificar los filtros o el término de búsqueda.</p>
+        <a href="{% url 'product_list' %}" class="btn btn-secondary btn-sm" style="margin-top: 1.5rem;">Restaurar Lista</a>
+    </div>
+{% endif %}
 {% endblock %}

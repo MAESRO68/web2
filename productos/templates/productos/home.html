@@ -1,6 +1,52 @@
 {% extends 'productos/base.html' %}
+{% block title %}Inicio{% endblock %}
 
 {% block content %}
-<h1>Bienvenido a la web</h1>
-<p>Gestión de productos y pedidos.</p>
+<section class="hero">
+    <h1 class="hero-title">Gestión de Inventario & Pedidos</h1>
+    <p class="hero-subtitle">
+        Descubre un portal moderno y seguro para dar de alta productos, realizar búsquedas con filtros en tiempo real, ordenar registros y gestionar tus pedidos de manera ágil.
+    </p>
+    <div class="hero-actions">
+        <a href="{% url 'product_list' %}" class="btn btn-primary">Explorar Catálogo</a>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'signup' %}" class="btn btn-secondary">Comenzar Gratis</a>
+        {% else %}
+            <a href="{% url 'order_list' %}" class="btn btn-secondary">Ir a Mis Pedidos</a>
+        {% endif %}
+    </div>
+</section>
+
+<section>
+    <h2 class="section-title">Productos Recientes</h2>
+    {% if productos_recientes %}
+        <div class="grid">
+            {% for p in productos_recientes %}
+                <div class="card glass-panel">
+                    <span class="card-category">{{ p.get_categoria_display }}</span>
+                    <h3 class="card-title">{{ p.nombre }}</h3>
+                    <p class="card-desc">{{ p.descripcion }}</p>
+                    <div class="card-footer">
+                        <span class="card-price">${{ p.precio }}</span>
+                        {% if p.stock > 0 %}
+                            <span class="badge badge-success">En Stock ({{ p.stock }})</span>
+                        {% else %}
+                            <span class="badge badge-danger">Agotado</span>
+                        {% endif %}
+                    </div>
+                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                        <a href="{% url 'product_detail' p.pk %}" class="btn btn-secondary btn-sm" style="flex-grow: 1;">Ver Detalle</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="glass-panel" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+            <p>No hay productos registrados en el sistema actualmente.</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'product_create' %}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">Crear Primer Producto</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
 {% endblock %}

@@ -1,10 +1,48 @@
 {% extends 'productos/base.html' %}
+{% block title %}Crear una Cuenta{% endblock %}
 
 {% block content %}
-<h2>Registro</h2>
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Registrarse</button>
-</form>
+<div class="glass-panel form-card">
+    <h2 class="form-title">Registrarse</h2>
+    
+    <form method="POST" novalidate>
+        {% csrf_token %}
+        
+        <!-- Errores generales del registro -->
+        {% if form.non_field_errors %}
+            <div class="form-errors">
+                <strong>Por favor corrige los siguientes errores:</strong>
+                <ul>
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <!-- Listar los campos uno a uno -->
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}<span style="color: var(--danger);">*</span>{% endif %}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="help-text">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        
+        <button type="submit" class="btn btn-primary">Crear Cuenta</button>
+        
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--text-secondary);">
+            ¿Ya tienes una cuenta? 
+            <a href="{% url 'login' %}" style="font-weight: 600;">Inicia sesión aquí</a>
+        </div>
+    </form>
+</div>
 {% endblock %}
